@@ -16,19 +16,19 @@ import {
   UnprocessableEntityException,
   ValidationPipe,
 } from '@nestjs/common';
-import { SharedModule } from './shared/shared.module';
 import { middleware as expressCtx } from 'express-ctx';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { QueryFailedFilter } from './filters/query-failed.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { json, urlencoded } from 'express';
+import { SharedModule } from './shared/shared.module';
 
 async function bootstrap() {
   initializeTransactionalContext();
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
-    { rawBody: true },
+    { rawBody: true, cors: true },
   );
 
   app.set('trust proxy', true);
@@ -56,7 +56,6 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableVersioning();
-  app.setGlobalPrefix('api');
 
   const reflector = app.get(Reflector);
 
