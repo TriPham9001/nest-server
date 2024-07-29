@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import { AppModule } from './app.module';
 import {
   NestExpressApplication,
   ExpressAdapter,
@@ -21,7 +22,6 @@ import { QueryFailedFilter } from './filters/query-failed.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { json, urlencoded } from 'express';
 import { SharedModule } from './shared/shared.module';
-import { AppModule } from './app.module';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -41,6 +41,49 @@ async function bootstrap() {
       stream: {
         write: (message) => {
           loggerService.log(message);
+        },
+      },
+    }),
+  );
+
+  app.use(
+    json({ limit: '50mb', verify: (req, res, buf) => (req['rawBody'] = buf) }),
+  );
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
+
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(helmet());
+
+  app.enableVersioning();
+
+  const reflector = app.get(Reflector);
+
+  app.useGlobalFilters(
+    new HttpExceptionFilter(reflector),
+    new QueryFailedFilter(reflector),
+  );
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(reflector),
+    new TransformInterceptor(reflector),
+  );
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      transform: true,
+      dismissDefaultMessages: true,
+      exceptionFactory: (errors) => new UnprocessableEntityException(errors),
+    }),
+  );
+
+  app.use(expressCtx);
+
+  await app.listen(3000);
+}
+bootstrap();
+erService.log(message);
         },
       },
     }),
