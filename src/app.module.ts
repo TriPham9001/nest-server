@@ -35,7 +35,6 @@ import { SharedModule } from './shared/shared.module';
         if (!options) {
           throw new Error('Invalid options passed');
         }
-
         return Promise.resolve(
           addTransactionalDataSource(new DataSource(options)),
         );
