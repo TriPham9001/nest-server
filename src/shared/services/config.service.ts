@@ -44,12 +44,8 @@ export class ConfigService {
   }
 
   get typeOrmConfig(): TypeOrmModuleOptions & SeederOptions {
-    const entities = ['dist/modules/**/*.entity{.ts,.js}'];
-
     return {
-      entities,
-      keepConnectionAlive: true,
-      synchronize: false,
+      entities: ['dist/modules/**/*.entity{.ts,.js}'],
       type: 'postgres',
       host: this.get('DATABASE_HOST'),
       port: this.getNumber('DATABASE_PORT'),
@@ -57,16 +53,13 @@ export class ConfigService {
       password: this.get('DATABASE_PASSWORD'),
       database: this.get('DATABASE_DATABASE'),
       logging: this.nodeEnv !== 'production',
-      ssl: this.nodeEnv === 'production',
+      ssl:
+        this.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
-      extra: {
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      },
+      synchronize: false,
+      keepConnectionAlive: true,
     };
   }
-
   get supabaseConfig(): any {
     return {
       url: this.get('SUPABASE_URL'),
