@@ -17,7 +17,6 @@ import {
   validationSchema,
 } from './shared/services/config.service';
 import { SharedModule } from './shared/shared.module';
-import { ComicStoryModule } from './modules/comic-story/comic-story.module';
 
 @Module({
   imports: [
@@ -41,7 +40,6 @@ import { ComicStoryModule } from './modules/comic-story/comic-story.module';
         );
       },
     }),
-    ComicStoryModule,
   ],
   providers: [AppService],
   controllers: [AppController],
