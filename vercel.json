@@ -16,7 +16,7 @@
   "env": {
     "NODE_ENV": "production",
     "PORT": "3000",
-    "APP_URL": "http://localhost:8000",
+    "APP_URL": "https://fcomic.vercel.app",
     "APP_NAME": "Comic",
     "DATABASE_DATABASE": "postgres",
     "DATABASE_HOST": "aws-0-us-east-1.pooler.supabase.com",
