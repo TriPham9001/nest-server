@@ -1,5 +1,4 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
 import {
   NestExpressApplication,
   ExpressAdapter,
@@ -22,13 +21,14 @@ import { QueryFailedFilter } from './filters/query-failed.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { json, urlencoded } from 'express';
 import { SharedModule } from './shared/shared.module';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   initializeTransactionalContext();
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
-    { rawBody: true, cors: true },
+    { rawBody: true },
   );
 
   app.set('trust proxy', true);
@@ -80,6 +80,8 @@ async function bootstrap() {
 
   app.use(expressCtx);
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
