@@ -54,7 +54,7 @@ export class AppController {
             port: this.configService.getNumber('EVENT_STORE_TCP_PORT'),
           },
         }),
-      async () => this.db.pingCheck('database'),
+      async () => this.db.pingCheck('database', { timeout: 5000 }),
     ]);
   }
 }
