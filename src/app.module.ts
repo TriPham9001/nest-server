@@ -7,15 +7,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 
-import { SharedModule } from './shared/shared.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
 import {
   ConfigService,
   validationSchema,
 } from './shared/services/config.service';
-import { AppService } from './app.service';
-import { AppController } from './app.controller';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -34,7 +35,6 @@ import { AppController } from './app.controller';
         if (!options) {
           throw new Error('Invalid options passed');
         }
-
         return Promise.resolve(
           addTransactionalDataSource(new DataSource(options)),
         );

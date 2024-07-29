@@ -6,9 +6,9 @@ import {
   MicroserviceHealthIndicator,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
-import { ConfigService } from './shared/services/config.service';
 import { Request as ExpressRequest, Router } from 'express';
 import { AppService } from './app.service';
+import { ConfigService } from './shared/services/config.service';
 
 @Controller()
 export class AppController {

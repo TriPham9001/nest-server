@@ -1,12 +1,12 @@
-import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
 import dotenv from 'dotenv';
 import Joi from 'joi';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { IAppOptions } from 'src/interfaces/app.interface';
 import { ISwaggerConfigOptions } from 'src/interfaces/swagger-config.interface';
 import { SeederOptions } from 'typeorm-extension';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { Injectable } from '@nestjs/common';
 
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
@@ -17,11 +17,8 @@ export const validationSchema = Joi.object({
 @Injectable()
 export class ConfigService {
   constructor() {
-    dotenv.config({
-      path: `.env`,
-    });
+    dotenv.config({ path: `.env` });
 
-    // Replace \\n with \n to support multiline strings in AWS
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
     }
@@ -83,30 +80,6 @@ export class ConfigService {
   get winstonConfig(): winston.LoggerOptions {
     return {
       transports: [
-        new DailyRotateFile({
-          level: 'debug',
-          filename: `./logs/${this.nodeEnv}/debug-%DATE%.log`,
-          datePattern: 'YYYY-MM-DD',
-          zippedArchive: true,
-          maxSize: '20m',
-          maxFiles: '14d',
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.json(),
-          ),
-        }),
-        new DailyRotateFile({
-          level: 'error',
-          filename: `./logs/${this.nodeEnv}/error-%DATE%.log`,
-          datePattern: 'YYYY-MM-DD',
-          zippedArchive: false,
-          maxSize: '20m',
-          maxFiles: '30d',
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.json(),
-          ),
-        }),
         new winston.transports.Console({
           level: 'debug',
           handleExceptions: true,
