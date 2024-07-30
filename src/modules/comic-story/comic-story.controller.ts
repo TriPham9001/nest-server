@@ -9,7 +9,6 @@ import {
 import { ComicStoryService } from './comic-story.service';
 import { PageDto } from 'src/common/dto/page.dto';
 import { ComicStoryDto } from './dtos/comic-story.dto';
-import { PageOptionsDto } from 'src/common/dto/page-options.dto';
 import { SupabaseService } from 'src/shared/services/supabase-s3.service';
 import { ResponseMessage } from 'src/decorators/response-message.decorator';
 
@@ -24,27 +23,13 @@ export class ComicStoryController {
   @Get()
   @ResponseMessage('Comic Strories successfully fetched')
   @HttpCode(HttpStatus.OK)
-  async getComicStories(
-    @Query() pageOptionsDto: PageOptionsDto,
-  ): Promise<PageDto<ComicStoryDto>> {
+  async getComicStories(): Promise<PageDto<ComicStoryDto>> {
     const comicStories = (await this.comicStoryService.find(
       {
         where: {},
       },
-      true,
-      pageOptionsDto,
+      false,
     )) as PageDto<ComicStoryDto>;
-
-    await Promise.all(
-      (comicStories as PageDto<ComicStoryDto>).data.map(async (data) => {
-        data.avatar = await this.supabaseService.getImageUrl(
-          `avatars/${data.avatar}`,
-        );
-        data.cover_picture = await this.supabaseService.getImageUrl(
-          `covers/${data.cover_picture}`,
-        );
-      }),
-    );
 
     return comicStories;
   }
