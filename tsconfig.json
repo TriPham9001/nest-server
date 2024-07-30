@@ -18,7 +18,13 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "compilerOptions": {
+      "baseUrl": "./",
+      "paths": {
+        "src/*": ["src/*"]
+      }
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
