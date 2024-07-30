@@ -22,6 +22,8 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import { QueryFailedFilter } from './filters/query-failed.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { json, urlencoded } from 'express';
+import path from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -32,6 +34,13 @@ async function bootstrap() {
   );
 
   app.set('trust proxy', true);
+
+  console.log('Environment Variables:', process.env);
+  console.log('Current Directory:', __dirname);
+  console.log(
+    'Files in Directory:',
+    fs.readdirSync(path.resolve(__dirname, 'src/common')),
+  );
 
   const loggerService = app.select(SharedModule).get(LoggerService);
 
