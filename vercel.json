@@ -28,8 +28,5 @@
     "SUPABASE_BUCKET": "uploads",
     "S3_ENDPOINT": "https://qbfhqeaocsufdscbmmnj.supabase.co/storage/v1/s3",
     "S3_REGION": "us-east-1"
-  },
-  "engines": {
-    "node": "16.x"
   }
 }
