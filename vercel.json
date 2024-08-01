@@ -12,21 +12,5 @@
       "dest": "/src/main.js",
       "methods": ["GET", "POST", "PATCH", "DELETE"]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": "3000",
-    "APP_URL": "https://fcomic.vercel.app",
-    "APP_NAME": "Comic",
-    "DATABASE_DATABASE": "postgres",
-    "DATABASE_HOST": "aws-0-us-east-1.pooler.supabase.com",
-    "DATABASE_PORT": "6543",
-    "DATABASE_USER": "postgres.qbfhqeaocsufdscbmmnj",
-    "DATABASE_PASSWORD": "RQxZE8XiciAChuis",
-    "SUPABASE_URL": "https://qbfhqeaocsufdscbmmnj.supabase.co",
-    "SUPABASE_ANON_KEY": "your-anon-key",
-    "SUPABASE_BUCKET": "uploads",
-    "S3_ENDPOINT": "https://qbfhqeaocsufdscbmmnj.supabase.co/storage/v1/s3",
-    "S3_REGION": "us-east-1"
-  }
+  ]
 }
