@@ -1,24 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
 import dotenv from 'dotenv';
 import Joi from 'joi';
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { IAppOptions } from 'src/interfaces/app.interface';
 import { ISwaggerConfigOptions } from 'src/interfaces/swagger-config.interface';
 import { SeederOptions } from 'typeorm-extension';
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import { Injectable } from '@nestjs/common';
+import { IJWTConfigOptions } from 'src/interfaces/jwt-config.interface';
+import { type BullRootModuleOptions } from '@nestjs/bull';
+import { CacheModuleOptions } from '@nestjs/cache-manager';
+import redisStore from 'cache-manager-redis-store';
 
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
+  REDIS_HOST: Joi.string().default('localhost'),
+  REDIS_PORT: Joi.number().default(6379),
 });
 
 @Injectable()
 export class ConfigService {
   constructor() {
-    dotenv.config({ path: `.env` });
+    dotenv.config({
+      path: `.env`,
+    });
 
+    // Replace \\n with \n to support multiline strings in AWS
     for (const envName of Object.keys(process.env)) {
       process.env[envName] = process.env[envName].replace(/\\n/g, '\n');
     }
@@ -44,8 +52,18 @@ export class ConfigService {
   }
 
   get typeOrmConfig(): TypeOrmModuleOptions & SeederOptions {
+    const entities = [__dirname + '/../../modules/**/*.entity{.ts,.js}'];
+    const migrations = [__dirname + '/../../database/migrations/*{.ts,.js}'];
+    const seeds = [__dirname + '/../../database/seeds/*{.ts,.js}'];
+
     return {
-      entities: ['dist/modules/**/*.entity{.ts,.js}'],
+      entities,
+      migrations,
+      seeds,
+      migrationsTableName: 'migrations',
+      migrationsRun: true,
+      keepConnectionAlive: true,
+      synchronize: false,
       type: 'postgres',
       host: this.get('DATABASE_HOST'),
       port: this.getNumber('DATABASE_PORT'),
@@ -53,20 +71,52 @@ export class ConfigService {
       password: this.get('DATABASE_PASSWORD'),
       database: this.get('DATABASE_DATABASE'),
       logging: this.nodeEnv !== 'production',
-      ssl:
-        this.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: this.nodeEnv === 'production',
       autoLoadEntities: true,
-      synchronize: false,
-      keepConnectionAlive: true,
+      extra: {
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      },
     };
   }
+
+  get jwtConfig(): IJWTConfigOptions {
+    return {
+      googleClientId: this.get('GOOGLE_CLIENT_ID'),
+      googleClientSecret: this.get('GOOGLE_CLIENT_SECRET'),
+      jwtAccessExpirationMinutes:
+        this.getNumber('JWT_ACCESS_EXPIRATION_MINUTES') || 30,
+      jwtRefreshExpirationDays:
+        this.getNumber('JWT_REFRESH_EXPIRATION_DAYS') || 30,
+      jwtSecret: this.get('JWT_SECRET'),
+      jwtVerifyEmailExpirationMinutes:
+        this.getNumber('JWT_VERIFY_EMAIL_EXPIRATION_MINUTES') || 30,
+      jwtWorkspaceInvitationExpirationDays:
+        this.getNumber('JWT_WORKSPACE_INVITATION_EXPIRATION_DAYS') || 30,
+      allowedEmails: this.get('ALLOWED_EMAILS').split(',') || [],
+    };
+  }
+
+  get bullConfig(): BullRootModuleOptions {
+    return {
+      redis: {
+        host: this.get('REDIS_HOST'),
+        port: this.getNumber('REDIS_PORT'),
+        password: this.get('REDIS_PASSWORD'),
+      },
+    };
+  }
+
   get supabaseConfig(): any {
     return {
       url: this.get('SUPABASE_URL'),
       key: this.get('SUPABASE_ANON_KEY'),
-      bucketName: this.get('SUPABASE_BUCKET_NAME'),
-      bucketRegion: this.get('S3_REGION'),
       bucketEndpoint: this.get('S3_ENDPOINT'),
+      bucketName: this.get('SUPABASE_S3_BUCKET_NAME'),
+      bucketRegion: this.get('SUPABASA_S3_BUCKET_REGION'),
+      accessKeyId: this.get('SUPABASE_S3_ACCESS_KEY_ID'),
+      secretAccessKey: this.get('SUPABASE_S3_SECRET_ACCESS_KEY'),
     };
   }
 
@@ -96,6 +146,16 @@ export class ConfigService {
       description: this.get('SWAGGER_DESCRIPTION'),
       version: this.get('SWAGGER_VERSION') || '0.0.1',
       scheme: this.get('SWAGGER_SCHEME') === 'https' ? 'https' : 'http',
+    };
+  }
+
+  get cacheManagerConfig(): CacheModuleOptions {
+    return {
+      store: redisStore,
+      host: this.get('REDIS_HOST'),
+      port: this.getNumber('REDIS_PORT'),
+      password: this.get('REDIS_PASSWORD'),
+      ttl: 604800,
     };
   }
 }

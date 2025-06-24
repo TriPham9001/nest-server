@@ -3,7 +3,6 @@ export enum TokenType {
   REFRESH = 'refresh',
   RESET_PASSWORD = 'resetPassword',
   VERIFY_EMAIL = 'verifyEmail',
-  WORKSPACE_INVITATION = 'workspaceInvitation',
 }
 
 export enum Provider {
@@ -11,4 +10,5 @@ export enum Provider {
   FACEBOOK = 'facebook',
   GITHUB = 'github',
   LOCAL = 'local',
+  APPLE = 'apple',
 }

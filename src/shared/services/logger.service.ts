@@ -17,7 +17,6 @@ export class LoggerService extends ConsoleLogger {
 
   log(message: string): void {
     this._logger.info(message);
-    super.log(message);
   }
 
   info(message: string): void {
@@ -33,7 +32,6 @@ export class LoggerService extends ConsoleLogger {
     this._logger.error(
       `${context || ''} ${message} -> (${trace || 'trace not provided !'})`,
     );
-    super.error(message, trace, context);
   }
 
   warn(message: string): void {

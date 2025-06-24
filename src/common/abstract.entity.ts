@@ -18,13 +18,13 @@ export abstract class AbstractEntity<
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  created_at!: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  updated_at!: Date;
+  updatedAt!: Date;
 
   private dtoClass?: Constructor<DTO, [AbstractEntity, O?]>;
 

@@ -6,9 +6,9 @@ import {
   MicroserviceHealthIndicator,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
+import { ConfigService } from './shared/services/config.service';
 import { Request as ExpressRequest, Router } from 'express';
 import { AppService } from './app.service';
-import { ConfigService } from './shared/services/config.service';
 
 @Controller()
 export class AppController {
@@ -53,7 +53,6 @@ export class AppController {
             host: this.configService.get('EVENT_STORE_HOSTNAME'),
             port: this.configService.getNumber('EVENT_STORE_TCP_PORT'),
           },
-          timeout: 5000,
         }),
       async () => this.db.pingCheck('database'),
     ]);

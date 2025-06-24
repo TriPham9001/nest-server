@@ -1,0 +1,128 @@
+name: development
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  pull_request:
+    branches:
+      - dev
+    types: [closed]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build source
+        run: npm run build
+
+  versioning:
+    if: github.event.pull_request.merged == true
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.create_release_version.outputs.release_tag }}
+    steps:
+      - name: Taking The Latest Release Tag number
+        id: releaseVersion
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository}}
+        run: |
+          release_json=$(curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$REPO_NAME/releases/latest)
+          message=$(echo "$release_json" | jq -r '.message')
+          if [[ "$message" == "Not Found" ]]; then
+            latest_release_tag="v0.0.0"
+          else
+            latest_release_tag=$(echo "$release_json" | jq -r '.tag_name')
+          fi
+          echo "Latest release tag is: $latest_release_tag"
+          echo "latest_release_tag=$latest_release_tag" >> $GITHUB_OUTPUT
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Bumping Major Index
+        id: bump_version_major
+        if: contains(github.event.pull_request.title, 'major')
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ steps.releaseVersion.outputs.latest_release_tag }}
+          version-fragment: 'major'
+
+      - name: Bumping Minor Index
+        id: bump_version_minor
+        if: contains(github.event.pull_request.title, 'minor')
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ steps.releaseVersion.outputs.latest_release_tag }}
+          version-fragment: 'feature'
+
+      - name: Bumping Patch Index
+        id: bump_version_patch
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ steps.releaseVersion.outputs.latest_release_tag }}
+          version-fragment: 'bug'
+
+      - name: Create release version
+        id: create_release_version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAJOR_RELEASE_TAG: ${{ steps.bump_version_major.outputs.next-version }}
+          MINOR_RELEASE_TAG: ${{ steps.bump_version_minor.outputs.next-version }}
+          PATCH_RELEASE_TAG: ${{ steps.bump_version_patch.outputs.next-version }}
+        run: |
+          if [[ "$MAJOR_RELEASE_TAG" != "" ]]; then
+            release_tag=$MAJOR_RELEASE_TAG
+          elif [[ "$MINOR_RELEASE_TAG" != "" ]]; then
+            release_tag=$MINOR_RELEASE_TAG
+          else
+            release_tag=$PATCH_RELEASE_TAG
+          fi
+          echo "Current release tag is: $release_tag"
+          echo "release_tag=$release_tag" >> $GITHUB_OUTPUT
+
+  build-image:
+    if: github.event.pull_request.merged == true
+    needs: versioning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.versioning.outputs.release_tag }}
+          REPO_NAME: ${{ github.repository}}
+        run: |
+          curl \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$REPO_NAME/releases \
+            -d "{\"tag_name\":\"$RELEASE_TAG\",\"target_commitish\":\"dev\",\"name\":\"$RELEASE_TAG\",\"body\":\"\",\"draft\":false,\"prerelease\":false,\"generate_release_notes\":false}"
