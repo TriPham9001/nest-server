@@ -21,9 +21,6 @@ import { middleware as expressCtx } from 'express-ctx';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { QueryFailedFilter } from './filters/query-failed.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
-import { json, urlencoded } from 'express';
-import path from 'path';
-import * as fs from 'fs';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -34,13 +31,6 @@ async function bootstrap() {
   );
 
   app.set('trust proxy', true);
-
-  console.log('Environment Variables:', process.env);
-  console.log('Current Directory:', __dirname);
-  console.log(
-    'Files in Directory:',
-    fs.readdirSync(path.resolve(__dirname, 'src/common')),
-  );
 
   const loggerService = app.select(SharedModule).get(LoggerService);
 
@@ -55,10 +45,12 @@ async function bootstrap() {
     }),
   );
 
-  app.use(
-    json({ limit: '50mb', verify: (req, res, buf) => (req['rawBody'] = buf) }),
-  );
-  app.use(urlencoded({ extended: true, limit: '50mb' }));
+  // Enable CORS
+  app.enableCors({
+    origin: '*', // Update with your frontend origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // If you need to allow cookies
+  });
 
   app.use(compression());
   app.use(cookieParser());

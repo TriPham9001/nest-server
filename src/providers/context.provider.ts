@@ -1,5 +1,7 @@
 import { getValue, setValue } from 'express-ctx';
 
+import { type UserEntity } from '../modules/user/user.entity';
+
 export class ContextProvider {
   private static readonly nameSpace = 'request';
 
@@ -16,5 +18,13 @@ export class ContextProvider {
 
   private static getKeyWithNamespace(key: string): string {
     return `${ContextProvider.nameSpace}.${key}`;
+  }
+
+  static setAuthUser(user: UserEntity): void {
+    ContextProvider.set(ContextProvider.authUserKey, user);
+  }
+
+  static getAuthUser(): UserEntity | undefined {
+    return ContextProvider.get<UserEntity>(ContextProvider.authUserKey);
   }
 }
